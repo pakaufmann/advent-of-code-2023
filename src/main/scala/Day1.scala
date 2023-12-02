@@ -14,13 +14,11 @@ object Day1 {
   }
 
   private def find(input: List[String], first: Regex, last: Regex): Int =
-    input.map(findDigits(first, last)).map(_.number()).sum
+    input.map(findDigits(first, last)).sum
 
-  private def findDigits(firstRegex: Regex, lastRegex: Regex)(line: String): FirstLastDigits =
-    FirstLastDigits(
-      toNumber(firstRegex.findAllIn(line).toList.head),
-      toNumber(lastRegex.findAllIn(line.reverse).toList.head.reverse)
-    )
+  private def findDigits(firstRegex: Regex, lastRegex: Regex)(line: String): Int =
+      toNumber(firstRegex.findFirstIn(line).getOrElse("0")) * 10 +
+      toNumber(lastRegex.findFirstIn(line.reverse).getOrElse("0").reverse)
 
   private def toNumber(s: String) =
     s match {
@@ -35,8 +33,4 @@ object Day1 {
       case "eight" => 8
       case "nine" => 9
     }
-}
-
-case class FirstLastDigits(first: Int, last: Int) {
-  def number(): Int = first * 10 + last
 }
