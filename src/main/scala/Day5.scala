@@ -26,24 +26,19 @@ object Day5 {
         return calculateLocation(mappings, first).min(calculateLocation(mappings, first + 1))
       }
 
-      val stepCount = (length / 2).max(1)
-      val lastStep = first + length
-      val steps = first.to(lastStep, stepCount)
+      val stepCount = length / 2
+      val stepCount2 = length - stepCount
+      val startLoc = calculateLocation(mappings, first)
+      val middleLoc = calculateLocation(mappings, first + stepCount)
+      val endLoc = calculateLocation(mappings, first + length)
 
-      var lastEnd = calculateLocation(mappings, first)
-      var min = lastEnd
-
-      for (step <- steps.drop(1)) {
-        val newEnd = calculateLocation(mappings, step)
-        if (lastEnd + stepCount != newEnd) {
-          val newMin = findMin(step - stepCount, stepCount)
-          if (newMin < min) {
-            min = newMin
-          }
-        }
-        lastEnd = newEnd
+      var min = Long.MaxValue
+      if (startLoc + stepCount != middleLoc) {
+        min = min.min(findMin(first, stepCount))
       }
-
+      if (middleLoc + stepCount2 != endLoc) {
+        min = min.min(findMin(first + stepCount, stepCount2))
+      }
       min
     }
 
