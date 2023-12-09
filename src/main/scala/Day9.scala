@@ -24,9 +24,7 @@ object Day9 {
     }
 
   def generateNext(sequences: Seq[List[Int]]): Int =
-    sequences.foldRight(0) {
-      case (sequence, last) => sequence.last + last
-    }
+    sequences.map(_.last).sum
 
   def generateDiffs(sequence: List[Int]): Seq[List[Int]] =
     LazyList.iterate(sequence)(generateDiff)
