@@ -28,38 +28,26 @@ object Day12 {
   def countArrangement(remaining: List[Char], toPlace: List[Int]): Long = {
     val springs = remaining.dropWhile(_ == '.')
 
-    val cached = cache.get((springs, toPlace))
+    cache.getOrElseUpdate((springs, toPlace), {
+      if (toPlace.isEmpty) return if (springs.contains('#')) 0 else 1
+      if (springs.isEmpty) return 0
 
-    if (cached.isDefined) {
-      return cached.get
-    }
+      val nextToPlace :: remainingToPlace = toPlace.dropWhile(_ == '.')
+      val nextSpring :: remainingSprings = springs
+      val nextSprings = springs.take(nextToPlace)
+      val canPlace = nextSprings.size == nextToPlace &&
+        nextSprings.forall(c => c == '?' || c == '#') &&
+        !springs.drop(nextToPlace).headOption.contains('#')
 
-    if (toPlace.isEmpty) {
-      return if (springs.contains('#')) 0 else 1
-    }
-
-    if (springs.isEmpty) {
-      return if (toPlace.isEmpty) 1 else 0
-    }
-
-    val nextToPlace :: remainingToPlace = toPlace.dropWhile(_ == '.')
-    val nextSpring :: remainingSprings = springs
-    val nextBroken = springs.drop(nextToPlace).headOption.contains('#')
-    val next = springs.take(nextToPlace)
-    val canPlace = next.size == nextToPlace &&
-      next.forall(c => c == '?' || c == '#') &&
-      !nextBroken
-
-    val result = (nextSpring, canPlace) match {
-      case ('#', true) => countArrangement(springs.drop(nextToPlace + 1), remainingToPlace)
-      case ('#', false) => 0
-      case (_, true) => countArrangement(springs.drop(nextToPlace + 1), remainingToPlace) +
-        countArrangement(remainingSprings, toPlace)
-      case _ =>
-        countArrangement(remainingSprings, toPlace)
-    }
-    cache.put((springs, toPlace), result)
-    result
+      (nextSpring, canPlace) match {
+        case ('#', true) => countArrangement(springs.drop(nextToPlace + 1), remainingToPlace)
+        case ('#', false) => 0
+        case (_, true) => countArrangement(springs.drop(nextToPlace + 1), remainingToPlace) +
+          countArrangement(remainingSprings, toPlace)
+        case _ =>
+          countArrangement(remainingSprings, toPlace)
+      }
+    })
   }
 
   def parse(input: List[String]): List[Arrangement] = {
