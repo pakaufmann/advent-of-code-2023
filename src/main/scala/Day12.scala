@@ -25,7 +25,9 @@ object Day12 {
 
   private val cache = mutable.Map[(List[Char], List[Int]), Long]()
 
-  def countArrangement(springs: List[Char], toPlace: List[Int]): Long = {
+  def countArrangement(remaining: List[Char], toPlace: List[Int]): Long = {
+    val springs = remaining.dropWhile(_ == '.')
+
     val cached = cache.get((springs, toPlace))
 
     if (cached.isDefined) {
@@ -40,7 +42,7 @@ object Day12 {
       return if (toPlace.isEmpty) 1 else 0
     }
 
-    val nextToPlace :: remainingToPlace = toPlace
+    val nextToPlace :: remainingToPlace = toPlace.dropWhile(_ == '.')
     val nextSpring :: remainingSprings = springs
     val nextBroken = springs.drop(nextToPlace).headOption.contains('#')
     val next = springs.take(nextToPlace)
