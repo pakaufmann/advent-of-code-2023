@@ -27,7 +27,7 @@ object Day17 {
     val maxY = map.map(_._1.y).max
 
     val queue = mutable.PriorityQueue[State]()(StateOrdering)
-    val visited = mutable.Map[(Coordinate, Int, Direction), Int]()
+    val visited = mutable.Map[(Coordinate, Direction), (Int, Int)]()
 
     queue.addAll(List(
       State(Coordinate(0, 0), 0, RIGHT, 0),
@@ -41,14 +41,14 @@ object Day17 {
           minHeat = minHeat.min(heat)
           break()
         }
-        if (visited.get((coordinate, remaining, direction)).exists(_ <= heat)) {
+        if (visited.get((coordinate, direction)).exists(a => a._1 <= heat && a._2 >= remaining)) {
           break()
         }
         if (heat >= minHeat) {
           break()
         }
 
-        visited.put((coordinate, remaining, direction), heat)
+        visited.put((coordinate, direction), (heat, remaining))
 
         val (dx1, dx2) = direction match {
           case DOWN | UP => (-1, 1)
@@ -72,13 +72,13 @@ object Day17 {
     minHeat
   }
 
-  private def generateNextCoords(map: Map[Coordinate, Int], minLength: Int, maxLength: Int, state: State, dx2: Int, dy2: Int, dir2: Direction, maxX: Int, maxY: Int) = {
+  private def generateNextCoords(map: Map[Coordinate, Int], minLength: Int, maxLength: Int, state: State, dx: Int, dy: Int, dir2: Direction, maxX: Int, maxY: Int) = {
     val baseHeat = (1 until minLength)
-      .flatMap(l => map.get(Coordinate(x = state.coordinate.x + (dx2 * l), y = state.coordinate.y + (dy2 * l))))
+      .flatMap(l => map.get(Coordinate(state.coordinate.x + (dx * l), state.coordinate.y + (dy * l))))
       .sum
 
     (minLength to maxLength)
-      .map(l => Coordinate(x = state.coordinate.x + (dx2 * l), y = state.coordinate.y + (dy2 * l)))
+      .map(l => Coordinate(x = state.coordinate.x + (dx * l), y = state.coordinate.y + (dy * l)))
       .filter(c => c.x >= 0 && c.y >= 0 && c.x <= maxX && c.y <= maxY)
       .scanLeft(state.copy(heat = state.heat + baseHeat, remaining = maxLength)) { (s, c) =>
         s.copy(c, heat = s.heat + map(c), dir2, s.remaining - 1)
