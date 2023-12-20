@@ -11,16 +11,102 @@ object Day18 {
 
     println(part1(parse(input)))
     println(part2(parse(input)))
-  }
 
-  def part2(instructions: List[DigInstruction]): Long =
-    calc(instructions, _.direction2, _.meter2)
+    println(part1Shoelace(parse(input)))
+    println(part2Shoelace(parse(input)))
+  }
 
   def part1(instructions: List[DigInstruction]): Long =
     calc(instructions, _.direction, _.meter)
 
+  def part2(instructions: List[DigInstruction]): Long =
+    calc(instructions, _.direction2, _.meter2)
+
+  def part1Shoelace(instructions: List[DigInstruction]): Long =
+    shoelace(instructions, _.direction, _.meter)
+
+  def part2Shoelace(instructions: List[DigInstruction]): Long =
+    shoelace(instructions, _.direction2, _.meter2)
+
+  case class LCoordinate(x: Long, y: Long)
+
+  case class Edge(coordinate: LCoordinate, down: Long = 0, up: Long = 0, right: Long = 0, left: Long = 0)
 
   private def calc(instructions: List[DigInstruction], dirFunc: DigInstruction => Direction, meterFunc: DigInstruction => Long) = {
+    val edges = instructions
+      .scanLeft(Edge(LCoordinate(0, 0))) { (pos, instruction) =>
+        val meter = meterFunc(instruction)
+        dirFunc(instruction) match {
+          case RIGHT => Edge(coordinate = pos.coordinate.copy(x = pos.coordinate.x + meter), left = meter)
+          case LEFT => Edge(coordinate = pos.coordinate.copy(x = pos.coordinate.x - meter), right = meter)
+          case UP => Edge(coordinate = pos.coordinate.copy(y = pos.coordinate.y - meter), down = meter)
+          case DOWN => Edge(coordinate = pos.coordinate.copy(y = pos.coordinate.y + meter), up = meter)
+        }
+      }
+
+    val withDirections = edges.sliding(2).map {
+      case f :: s :: Nil =>
+        if (s.up != 0) {
+          f.copy(down = s.up)
+        } else if (s.left != 0) {
+          f.copy(right = s.left)
+        } else {
+          f
+        }
+    }.toList
+
+    val completeDirections = withDirections.head.copy(down = edges.last.down) +: withDirections.drop(1)
+    val byY = completeDirections.groupBy(_.coordinate.y)
+
+    var currentBorders = Map[Long, Edge]()
+    var total = 0L
+    var lastY = 0L
+    var lastCount = 0L
+
+    for (y <- byY.keySet.flatMap(i => List(i, i + 1)).toList.sorted) {
+      val diff = y - lastY
+      lastY = y
+
+      val updatedBorders = currentBorders
+        .map { case (k, e) => (k, e.copy(down = e.down - diff, right = 0)) }
+        .filter(_._2.down >= 0)
+
+      currentBorders = updatedBorders ++
+        byY.getOrElse(y, List()).map(n => n.coordinate.x -> n)
+
+      var isEnclosed = false
+      var enclosedCount = 0L
+      var lastColumn = 0L
+
+      for (x <- currentBorders.keys.toList.sorted) {
+        val border = currentBorders(x)
+
+        enclosedCount += 1
+        if (isEnclosed) {
+          enclosedCount += x - lastColumn - 1
+        }
+
+        if (border.down > 0) {
+          isEnclosed = !isEnclosed
+        }
+
+        if (!isEnclosed) {
+          if (border.right > 0) {
+            enclosedCount += border.right - 1
+          }
+        }
+        lastColumn = x
+      }
+
+      total += lastCount * diff
+      lastCount = enclosedCount
+    }
+    
+    total
+  }
+
+  def shoelace(instructions: List[DigInstruction], dirFunc: DigInstruction => Direction, meterFunc: DigInstruction => Long): Long = {
+    // Shoelace formula & picks theorem
     val edges = instructions
       .scanLeft((0L, 0L)) { (pos, instruction) =>
         val meter = meterFunc(instruction)
@@ -32,7 +118,6 @@ object Day18 {
         }
       }
 
-    // Shoelace formula & picks theorem
     (edges
       .sliding(2)
       .foldLeft(instructions.map(meterFunc).sum) { (sum, l) =>
