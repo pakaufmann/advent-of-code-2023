@@ -68,6 +68,14 @@ case class Symbol(symbol: Char, coordinate: Coordinate)
 case class Coordinate(x: Int, y: Int) {
   def neighbours(): Set[Coordinate] =
     (-1 to 1).flatMap(xD => (-1 to 1).map(yD => Coordinate(x + xD, y + yD))).toSet - this
+
+  def fourNeighbours(): Set[Coordinate] =
+    Set(
+      copy(x = x + 1),
+      copy(x = x - 1),
+      copy(y = y + 1),
+      copy(y = y - 1),
+    )
 }
 
 case class Number(number: Int, coordinates: Set[Coordinate]) {
