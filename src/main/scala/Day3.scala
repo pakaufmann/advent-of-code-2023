@@ -66,6 +66,14 @@ object Day3 {
 case class Symbol(symbol: Char, coordinate: Coordinate)
 
 case class Coordinate(x: Int, y: Int) {
+  def right() = copy(x = x + 1)
+
+  def left() = copy(x = x - 1)
+
+  def top() = copy(y = y - 1)
+
+  def bottom() = copy(y = y + 1)
+
   def neighbours(): Set[Coordinate] =
     (-1 to 1).flatMap(xD => (-1 to 1).map(yD => Coordinate(x + xD, y + yD))).toSet - this
 
